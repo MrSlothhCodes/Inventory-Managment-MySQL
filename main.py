@@ -1,27 +1,25 @@
 import tkinter as tk
 from tkinter import ttk
 import mysql.connector
-
 class InventoryManager:
     def __init__(self, root):
         self.root = root
         self.root.title("Inventory Manager")
 
-        # Create and connect to the database
         self.conn = mysql.connector.connect(
             host="127.0.0.1",
             user="root",
             password="1111",
             port = 3306,
-            database="inventory_db" 
+            
         )
         creator = self.conn.cursor()
-        database_name = 'inventory_db'
+        database_name = 'inventory_data'
         creator.execute(f"CREATE DATABASE IF NOT EXISTS {database_name}")
+        creator.execute(f"USE {database_name}")
         self.conn.commit()
         self.create_table()
 
-        # GUI components
         self.label = ttk.Label(root, text="Inventory Manager", font=("Helvetica", 16))
         self.label.grid(row=0, column=0, columnspan=7, pady=10)
 
@@ -55,8 +53,6 @@ class InventoryManager:
 
         self.credits_button = ttk.Button(root, text="Credits", command=self.credits)
         self.credits_button.grid(row=2, column=3, pady=10)
-
-        # Display inventory when the program runs
         self.display_inventory()
     def credits(self):
          add_window = tk.Toplevel(self.root)
@@ -64,16 +60,12 @@ class InventoryManager:
          bold_font = ("Helvetica", 10, "bold")
          text_label = tk.Label(add_window, text="Made By", font=bold_font, fg="Black", bg="lightgray")
          text_label.grid(row=0, column=0, columnspan=1, pady=10, padx=(20, 20), sticky='nsew')  # Centered horizontally
-
-         name = tk.Label(add_window, text="Suryansh Ahuja", font=bold_font, fg="Black", bg="lightgray")
+         name = tk.Label(add_window, text="Anuj Porwal", font=bold_font, fg="Black", bg="lightgray")
          name.grid(row=1, column=0, columnspan=1, pady=10, padx=(20, 20), sticky='nsew')
-
-         name1 = tk.Label(add_window, text=" ", font=bold_font, fg="Black", bg="lightgray")
+         name1 = tk.Label(add_window, text="Hussienberg", font=bold_font, fg="Black", bg="lightgray")
          name1.grid(row=2, column=0, columnspan=1, pady=10, padx=(20, 20), sticky='nsew')
-
-         name2 = tk.Label(add_window, text=" ", font=bold_font, fg="Black", bg="lightgray")
+         name2 = tk.Label(add_window, text="Suryansh Ahuja", font=bold_font, fg="Black", bg="lightgray")
          name2.grid(row=3, column=0, columnspan=1, pady=10, padx=(20, 20), sticky='nsew')
-
          text_label2 = tk.Label(add_window, text="As a Class 12 CSE project", font=bold_font, fg="Black", bg="lightgray")
          text_label2.grid(row=4, column=0, columnspan=1, pady=10, padx=(20, 20), sticky='nsew')  # Centered horizontally
          add_window.geometry("+%d+%d" % (self.root.winfo_rootx() + 50, self.root.winfo_rooty() + 50))
@@ -129,8 +121,6 @@ class InventoryManager:
                        (item, quantity, price, sold_to, bought_from))
         self.conn.commit()
         add_window.destroy()
-
-        # Display inventory after adding an item
         self.display_inventory()
         self.tree.update()
 
@@ -172,10 +162,8 @@ class InventoryManager:
         self.conn.commit()
         update_window.destroy()
 
-        # Display inventory after updating quantity
         self.display_inventory()
         self.tree.update()
-
 
     def delete_item(self):
         delete_window = tk.Toplevel(self.root)
@@ -183,7 +171,6 @@ class InventoryManager:
 
         id_label = ttk.Label(delete_window, text="ID:")
         id_label.grid(row=0, column=0, padx=10, pady=10)
-
         id_entry = ttk.Entry(delete_window)
         id_entry.grid(row=0, column=1, padx=10, pady=10)
 
@@ -194,25 +181,19 @@ class InventoryManager:
         cursor = self.conn.cursor()
         cursor.execute("DELETE FROM inventory WHERE id = %s", (item_id,))
         self.conn.commit()
-
-        # Display inventory after deleting an item
         self.display_inventory()
         self.tree.update()
-
         delete_window.destroy()
 
     def display_inventory(self):
         cursor = self.conn.cursor()
         cursor.execute("SELECT *, quantity * price as total FROM inventory")
         rows = cursor.fetchall()
-
         for row in self.tree.get_children():
             self.tree.delete(row)
-
         for row in rows:
             self.tree.insert("", "end", values=row)
         self.tree.update()
-
 if __name__ == "__main__":
     root = tk.Tk()
     app = InventoryManager(root)
