@@ -12,9 +12,13 @@ class InventoryManager:
             host="127.0.0.1",
             user="root",
             password="1111",
-            database="test",
-            port = 3306
+            port = 3306,
+            database="inventory_db" 
         )
+        creator = self.conn.cursor()
+        database_name = 'inventory_db'
+        creator.execute(f"CREATE DATABASE IF NOT EXISTS {database_name}")
+        self.conn.commit()
         self.create_table()
 
         # GUI components
