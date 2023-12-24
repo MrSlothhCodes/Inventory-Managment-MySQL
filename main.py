@@ -42,26 +42,25 @@ class InventoryManager:
         self.tree.column("Total", anchor=tk.CENTER, width=100)
         self.tree.grid(row=1, column=0, columnspan=7, padx=10)
 
-        self.add_button = ttk.Button(root, text="Purchase", command=self.add_item)
+        self.add_button = ttk.Button(root, text="Purchase", command=self.purchase)
         self.add_button.grid(row=2, column=0, pady=10)
 
-        self.update_button = ttk.Button(root, text="Update/Sell", command=self.update_quantity)
+        self.update_button = ttk.Button(root, text="Sell", command=self.sell)
         self.update_button.grid(row=2, column=1, pady=10)
 
-        self.delete_button = ttk.Button(root, text="Delete", command=self.delete_item)
+        self.delete_button = ttk.Button(root, text="Delete", command=self.delete)
         self.delete_button.grid(row=2, column=2, pady=10)
 
         self.credits_button = ttk.Button(root, text="Credits", command=self.credits)
         self.credits_button.grid(row=2, column=3, pady=10)
         self.display_inventory()
+    
     def credits(self):
          add_window = tk.Toplevel(self.root)
          add_window.title("Credits")
          bold_font = ("Helvetica", 10, "bold")
          text_label = tk.Label(add_window, text="Made By", font=bold_font, fg="Black", bg="lightgray")
          text_label.grid(row=0, column=0, columnspan=1, pady=10, padx=(20, 20), sticky='nsew')  # Centered horizontally
-         name = tk.Label(add_window, text="Anuj Porwal", font=bold_font, fg="Black", bg="lightgray")
-         name.grid(row=1, column=0, columnspan=1, pady=10, padx=(20, 20), sticky='nsew')
          name1 = tk.Label(add_window, text="Hussienberg", font=bold_font, fg="Black", bg="lightgray")
          name1.grid(row=2, column=0, columnspan=1, pady=10, padx=(20, 20), sticky='nsew')
          name2 = tk.Label(add_window, text="Suryansh Ahuja", font=bold_font, fg="Black", bg="lightgray")
@@ -84,27 +83,34 @@ class InventoryManager:
         ''')
         self.conn.commit()
 
-    def add_item(self):
+    def purchase(self):
+       
         add_window = tk.Toplevel(self.root)
         add_window.title("Purchase Item")
 
+        id_label = ttk.Label(add_window, text="ID:")
+        id_label.grid(row=0, column=0, padx=10, pady=10)
+
+        id_entry = ttk.Entry(add_window)
+        id_entry.grid(row=0, column=1, padx=10, pady=10)
+
         item_label = ttk.Label(add_window, text="Item:")
-        item_label.grid(row=0, column=0, padx=10, pady=10)
+        item_label.grid(row=1, column=0, padx=10, pady=10)
 
         item_entry = ttk.Entry(add_window)
-        item_entry.grid(row=0, column=1, padx=10, pady=10)
+        item_entry.grid(row=1, column=1, padx=10, pady=10)
 
         quantity_label = ttk.Label(add_window, text="Quantity:")
-        quantity_label.grid(row=1, column=0, padx=10, pady=10)
+        quantity_label.grid(row=2, column=0, padx=10, pady=10)
 
         quantity_entry = ttk.Entry(add_window)
-        quantity_entry.grid(row=1, column=1, padx=10, pady=10)
+        quantity_entry.grid(row=2, column=1, padx=10, pady=10)
 
         price_label = ttk.Label(add_window, text="Price:")
-        price_label.grid(row=2, column=0, padx=10, pady=10)
+        price_label.grid(row=3, column=0, padx=10, pady=10)
 
         price_entry = ttk.Entry(add_window)
-        price_entry.grid(row=2, column=1, padx=10, pady=10)
+        price_entry.grid(row=3, column=1, padx=10, pady=10)
 
         bought_from_label = ttk.Label(add_window, text="Bought From:")
         bought_from_label.grid(row=4, column=0, padx=10, pady=10)
@@ -112,19 +118,31 @@ class InventoryManager:
         bought_from_entry = ttk.Entry(add_window)
         bought_from_entry.grid(row=4, column=1, padx=10, pady=10)
 
-        save_button = ttk.Button(add_window, text="Save", command=lambda: self.save_item(item_entry.get(), quantity_entry.get(), price_entry.get(), "", bought_from_entry.get(), add_window))
+        save_button = ttk.Button(add_window, text="Save", command=lambda: self.save_item(id_entry.get(), item_entry.get(), quantity_entry.get(), price_entry.get(), "", bought_from_entry.get(), add_window))
         save_button.grid(row=5, column=0, columnspan=2, pady=10)
 
-    def save_item(self, item, quantity, price, sold_to, bought_from, add_window):
+    
+        
+
+    def save_item(self, id ,item, quantity, price, sold_to, bought_from, add_window):
         cursor = self.conn.cursor()
-        cursor.execute("INSERT INTO inventory (item, quantity, price, sold_to, bought_from) VALUES (%s, %s, %s, %s, %s)",
-                       (item, quantity, price, sold_to, bought_from))
+        cursor.execute(f"SELECT * FROM inventory WHERE ID = {id}")
+        existing_item = cursor.fetchone()
+        if existing_item:
+            cursor.execute("UPDATE inventory SET item = %s, quantity = %s, price = %s, sold_to = %s, bought_from = %s WHERE id = %s",
+                       (item, quantity, price, sold_to, bought_from, id))
+        else:
+        
+            cursor.execute("INSERT INTO inventory (id, item, quantity, price, sold_to, bought_from) VALUES (%s, %s, %s, %s, %s, %s)",
+                       (id, item, quantity, price, sold_to, bought_from))
+        
         self.conn.commit()
         add_window.destroy()
         self.display_inventory()
         self.tree.update()
+    
 
-    def update_quantity(self):
+    def sell(self):
         update_window = tk.Toplevel(self.root)
         update_window.title("Update/Sell")
 
@@ -134,7 +152,7 @@ class InventoryManager:
         id_entry = ttk.Entry(update_window)
         id_entry.grid(row=0, column=1, padx=10, pady=10)
 
-        quantity_label = ttk.Label(update_window, text="New Quantity:")
+        quantity_label = ttk.Label(update_window, text="Amt Sold")
         quantity_label.grid(row=1, column=0, padx=10, pady=10)
 
         quantity_entry = ttk.Entry(update_window)
@@ -157,15 +175,17 @@ class InventoryManager:
 
     def save_quantity(self, item_id, new_quantity, sold_to, bought_from, update_window):
         cursor = self.conn.cursor()
+        cursor.execute(f"SELECT quantity FROM inventory WHERE ID = {item_id}")
+        quan = cursor.fetchone()
+        cursor = self.conn.cursor()
         cursor.execute("UPDATE inventory SET quantity = %s, sold_to = %s, bought_from = %s WHERE id = %s",
-                       (new_quantity, sold_to, bought_from, item_id))
+                       (quan[0]-int(new_quantity), sold_to, bought_from, item_id))
         self.conn.commit()
         update_window.destroy()
-
         self.display_inventory()
         self.tree.update()
 
-    def delete_item(self):
+    def delete(self):
         delete_window = tk.Toplevel(self.root)
         delete_window.title("Delete Item")
 
